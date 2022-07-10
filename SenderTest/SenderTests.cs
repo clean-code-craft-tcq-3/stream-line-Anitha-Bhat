@@ -7,24 +7,28 @@ namespace SenderTests
   [TestClass]
   public class SenderTests
   {
-    [TestMethod("Test method to read the input sensor readings")]
+    [TestMethod("Test method to get the input Parameter")]
     public void CountInputReadings()
     {
-      List<SensorParameter> inputReadings = DataProcessor.ReadInputData();
+      List<SensorParameter> inputReadings = DataProcessor.GetSensorParameters(400,200,700,500);
 
-      Assert.AreEqual(inputReadings.Count, 50);
+      Assert.AreEqual(inputReadings.Count,20);
     }
 
-    [TestMethod("Test to convert the reading into the json format")]
+    [TestMethod("Test ConvertInputToJsonFormat converts data to json ")]
     public void ConvertInputToJsonTest()
     {
-      SensorParameter sensorData = new SensorParameter { Temperature = 10, StateOfCharge = 15 };
-
-      string jsonString = DataProcessor.ConvertInputToJsonFormat(sensorData);
-
-      string expectedString = "{\"Temperature\":10,\"StateOfCharge\":15}";
-
-      Assert.AreEqual(jsonString, expectedString);
+      string expectedOutput =
+        "[{\"Temperature\":9,\"StateOfCharge\":10},{\"Temperature\":19,\"StateOfCharge\":20}]";
+      List<SensorParameter> sensorList=new List<SensorParameter>();
+      SensorParameter sensorData1 = new SensorParameter { Temperature = 9, StateOfCharge = 10 };
+      SensorParameter sensorData2 = new SensorParameter { Temperature = 19, StateOfCharge = 20 };
+      sensorList.Add(sensorData1);
+      sensorList.Add(sensorData2);
+      string jsonString = DataProcessor.ConvertInputToJsonFormat(sensorList);
+      Assert.AreEqual(jsonString, expectedOutput);
     }
+
+   
   }
 }
