@@ -9,31 +9,55 @@ namespace Sender
 {
   public class DataProcessor
   {
+    private static int numberOfSample = 20;
     [ExcludeFromCodeCoverage]
     static void Main(string[] args)
     {
-      List<SensorParameter> sensorDataReadings = ReadInputData();
-
+      List<SensorParameter> sensorDataReadings = GetSensorParameters(200, 0, 400, 200);
       LogSensorReadingsOnConsole(sensorDataReadings);
+
+    }
+    
+    
+    public static List<SensorParameter> GetSensorParameters(int maxTemperature, int minTemperature, int maxSOC, int minSOC)
+    {
+      List<SensorParameter> sensorParameterList = new List<SensorParameter>();
+      List<int> temperatureInputSample = GetTemperatureInputSample(maxTemperature, minTemperature);
+      List<int> socInputSample = GetSOCInputSample(maxSOC, minSOC);
+      for (int i = 0; i < numberOfSample; i++)
+      {
+        SensorParameter sensorParam = new SensorParameter();
+        sensorParam.StateOfCharge = socInputSample[i];
+        sensorParam.Temperature = temperatureInputSample[i];
+        sensorParameterList.Add(sensorParam);
+      }
+      return sensorParameterList;
+    }
+    
+    private static List<int> GetTemperatureInputSample(int maxValue, int minValue)
+    {
+      return GenerateInputSamples(maxValue, minValue);
     }
 
-    public static List<SensorParameter> ReadInputData()
+    private static List<int> GetSOCInputSample(int maxValue, int minValue)
     {
-      List<SensorParameter> inputReadingList = new List<SensorParameter>();
+      return GenerateInputSamples(maxValue, minValue);
+    }
 
-       string fileDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "SensorData.csv");
-
-      using StreamReader streamReader = new StreamReader(fileDirectory);
-      while (!streamReader.EndOfStream)
+    private static List<int> GenerateInputSamples(int maxValue, int minValue)
+    {
+      List<int> randomSampleList = new List<int>();
+      for (int i = 0; i < numberOfSample; i++)
       {
-        string[] parameterColumn = streamReader.ReadLine()?.Split(',');
-        inputReadingList.Add(new SensorParameter { Temperature = float.Parse(parameterColumn[0]), StateOfCharge = float.Parse(parameterColumn[1]) });
+        int randomNum = (new Random()).Next(minValue, maxValue);
+        randomSampleList.Add(randomNum);
       }
 
-      return inputReadingList;
+      return randomSampleList;
     }
 
-    public static string ConvertInputToJsonFormat(SensorParameter sensorReading)
+
+    public static string ConvertInputToJsonFormat(List<SensorParameter> sensorReading)
     {
       string jsonFormatReading = JsonSerializer.Serialize(sensorReading);
 
@@ -42,12 +66,8 @@ namespace Sender
 
     public static void LogSensorReadingsOnConsole(List<SensorParameter> sensorDataReadings)
     {
-      foreach (SensorParameter sensorReading in sensorDataReadings)
-      {
-        string readingInJson = ConvertInputToJsonFormat(sensorReading);
-
-        Console.WriteLine(readingInJson);
-      }
+      string readingInJson = ConvertInputToJsonFormat(sensorDataReadings);
+      Console.WriteLine(readingInJson);
     }
   }
 }
