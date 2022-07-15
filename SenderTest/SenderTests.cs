@@ -28,7 +28,5 @@ namespace SenderTests
       string jsonString = DataProcessor.ConvertInputToJsonFormat(sensorList);
       Assert.AreEqual(jsonString, expectedOutput);
     }
-
-   
   }
 }
