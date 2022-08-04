@@ -1,88 +1,47 @@
-using System;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
+#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+#include "catch.hpp"
+#include "../BMS_Receiver.h"
+#include <cmath>
 
-namespace Receiver
+
+
+bool compare_float(float x, float y, float epsilon = 0.01f) {
+	if (fabs(x - y) < epsilon)
+		return true; 
+	return false; 
+}
+
+string test_data[4] = {"{\"Temperature\":-22,\"SOC\" : 16}",
+						"{\"Temperature\":-26,\"SOC\" : 56}", 
+						"{\"Temperature\":-38,\"SOC\" : 31}",  
+						"{\"Temperature\":-84,\"SOC\" : 63}"};
+
+
+TEST_CASE("validate sender data")
 {
-  [TestClass]
-  public class ReceiverTest
-  {
-    private const string consoleJsonData =
-      "[{\"Temperature\":20,\"StateOfCharge\":20}," +
-      "{\"Temperature\":12,\"StateOfCharge\":79}," +
-      "{\"Temperature\":1,\"StateOfCharge\":31}," +
-      "{\"Temperature\":12,\"StateOfCharge\":39}," +
-      "{\"Temperature\":5,\"StateOfCharge\":31}]";
+	BMS_Receiver receiver;
+	Parameters _parameter;
+	
+	for (int i = 0;i < 6;i++)
+	{
+		REQUIRE(receiver.parse_data(test_data[i], _parameter));
+		auto& list = receiver.get_parameter_list();
+		list.push_back(_parameter);		
+	}
 
-    private List<SensorParameter> sensorData;
+	REQUIRE(receiver.get_parameter_list().size() == 6);
 
- [TestInitialize]
-    public void init()
-    {
+	receiver.calculate_statistics();
+	auto stat = receiver.get_operation_instance().get_statitics();
 
-      sensorData = new List<SensorParameter>();
-      sensorData.Add(new SensorParameter() { Temperature = 20, StateOfCharge = 20 });
-      sensorData.Add(new SensorParameter() { Temperature = 12, StateOfCharge = 79 });
-      sensorData.Add(new SensorParameter() { Temperature = 1, StateOfCharge = 31 });
-      sensorData.Add(new SensorParameter() { Temperature = 12, StateOfCharge = 39 });
-      sensorData.Add(new SensorParameter() { Temperature = 5, StateOfCharge = 31 });
+	//positive test cases 
+	REQUIRE(compare_float(stat.min_SOC , 16.0));
+	REQUIRE(compare_float(stat.max_SOC , 63.0));
+	REQUIRE(compare_float(stat.min_Temperature , -52.0));
 
-    }
 
-    [TestMethod("should parse the json content and return list of type sensorParameter")]
-    public void JsonParserTest()
-    {
-      List<SensorParameter> sensorDataList = Receiver.JsonParser(consoleJsonData);
-      Assert.AreEqual(sensorDataList.Count, sensorData.Count);
-      Assert.AreEqual(sensorDataList[0].Temperature,20);
-      Assert.AreEqual(sensorDataList[1].Temperature, 12);
-      Assert.AreEqual(sensorDataList[2].Temperature, 1);
-      Assert.AreEqual(sensorDataList[0].StateOfCharge, 20);
-      Assert.AreEqual(sensorDataList[1].StateOfCharge, 79);
-      Assert.AreEqual(sensorDataList[2].StateOfCharge, 31);
-    }
-
-    [TestMethod("should calculate The moving average of  soc")]
-    public void SocMovingAverageTest()
-    {
-      float movingAverageOfSoc = Receiver.GetMovingAverageForSOC(sensorData);
-      Assert.AreEqual(movingAverageOfSoc,40);
-    }
-
-    [TestMethod("should calculate The moving average of  temperature")]
-    public void TemperatureMovingAverageTest()
-    {
-      float movingAverageOfTemp = Receiver.GetMovingAverageForTemperature(sensorData);
-      Assert.AreEqual(movingAverageOfTemp, 10);
-    }
-
-    [TestMethod("should fetch the maximum SOC")]
-    public void GetMaximumSocTest()
-    {
-      float maximumSoc= Receiver.GetMaximumSOC(sensorData);
-      Assert.AreEqual(maximumSoc, 79);
-    }
-
-    [TestMethod("should fetch the maximum temperature")]
-    public void GetMaximumTemperatureTest()
-    {
-      float maximumTemperature = Receiver.GetMaximumTemperature(sensorData);
-      Assert.AreEqual(maximumTemperature, 20);
-    }
-
-    [TestMethod("should fetch the minimum temperature")]
-    public void GetMinimumTemperatureTest()
-    {
-      float minimumTemperature = Receiver.GetMinimumTemperature(sensorData);
-      Assert.AreEqual(minimumTemperature, 1);
-    }
-    [TestMethod("should fetch the minimum SOC")]
-    public void GetMinimumSOCTest()
-    {
-      float minimumSoc = Receiver.GetMinimumSOC(sensorData);
-      Assert.AreEqual(minimumSoc, 20);
-    }
-
-  }
+	//Negative test 
+	REQUIRE(!receiver.parse_data("aa bb cc", _parameter));
+	REQUIRE(!receiver.parse_data("{\"Temperature:-26,\"SOC\" : 56}", _parameter));
+	REQUIRE(!receiver.parse_data("{\"Temperature:one,\"SOC\" : two}", _parameter));
 }
