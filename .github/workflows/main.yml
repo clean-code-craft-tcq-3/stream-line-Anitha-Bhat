@@ -24,6 +24,9 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.202
+        
+    - name: Run project
+      run:  dotnet run --project ./Sender/Sender.csproj
 
     - name: Run tests and collect coverage
       run: dotnet test ./SenderTest/SenderTests.csproj --collect:"XPlat Code Coverage"
