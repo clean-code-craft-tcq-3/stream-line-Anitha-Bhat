@@ -1,4 +1,4 @@
-name: Build receiver
+name: Build and Run
 
 on: [push, pull_request]
 
@@ -11,19 +11,25 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: install coverage tool
-      run: sudo apt-get install -y gcovr
-    - name: Install boost
-      run: sudo apt-get install libboost-thread-dev
-    - name: build
-      run: g++ -Wall -Wextra -fprofile-arcs -ftest-coverage -o receiver_exe ./Receiver/*.c*
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcovr
+
+    - name: build receiver
+      run: g++ -Wall -Wextra -fprofile-arcs -ftest-coverage -o receiverexe Receiver/*.c*
       
+    - name: run receiver
+      run: ./receiverexe
+      
+    - name: run sender along with receiver
+      run: ./senderexe | ./receiverexe
 
     - name: collect coverage
-      run: gcovr --gcov-exclude=".*test.*" -r . --html --html-details -o coverage.html
+      run: gcovr --gcov-exclude=".*test.*" -r . --html --html-details -o coverage.html --print-summary
 
     - name: create coverage artifact
       uses: actions/upload-artifact@v2
       with:
         name: coverage
         path: ./*.html
-        retention-days: 1
+        retention-days: 21
