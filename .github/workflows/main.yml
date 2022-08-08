@@ -41,8 +41,10 @@ jobs:
       run: sudo apt-get install -y gcovr
     - name: Install boost
       run: sudo apt-get install libboost-thread-dev
-    - name: build
-      run: g++ -Wall -Wextra -fprofile-arcs -ftest-coverage -o receiver_exe ./Receiver/*.c*
+
+    - name: build for Receiver
+      run: g++ -Wall -Wextra -fprofile-arcs -ftest-coverage -o receiver ./Receiver/BMS_Receiver.cpp ./Receiver/BMS_Receiver_main.cpp
+
       
 
     - name: collect coverage
