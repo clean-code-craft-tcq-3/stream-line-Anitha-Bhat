@@ -60,7 +60,7 @@ bool BMS_Receiver::parse_data(string data, Parameters &parameter)
 		boost::property_tree::read_json(ss, pt);
 
 		parameter.Temperature = pt.get<float>("Temperature");
-		parameter.SOC = pt.get<float>("SOC");
+		parameter.SOC = pt.get<float>("StateOfCharge");
 	}
 	catch (std::exception const& e)
 	{
