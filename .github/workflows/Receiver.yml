@@ -37,7 +37,7 @@ jobs:
       run: ./receiverexe
       
     - name: run sender along with receiver
-      run: ./Sender/Sender.csproj | ./receiverexe
+      run: dotnet run --project ./Sender/Sender.csproj | ./receiverexe
 
     - name: collect coverage
       run: gcovr --gcov-exclude=".*test.*" -r . --html --html-details -o coverage.html --print-summary
